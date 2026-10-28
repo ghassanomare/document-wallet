@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>محفظة الوثائق الرسمية</title>
+
+  <!-- مكتبة اختيار الدولة -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/18.2.1/css/intlTelInput.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/18.2.1/js/intlTelInput.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #1769aa;
+      --primary-dark: #104c80;
+      --background: #f3f6fa;
+      --surface: #ffffff;
+      --text: #1d2939;
+      --muted: #667085;
+      --border: #dce3eb;
+      --success: #16804a;
+      --danger: #c62828;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--background);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .hidden { display: none !important; }
+
+    /* صفحة الدخول */
+    .auth-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .welcome-panel {
+      background: linear-gradient(145deg, #123b67, #1769aa);
+      color: white;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .brand { font-size: 20px; font-weight: bold; }
+    .welcome-message { max-width: 500px; margin: auto; padding: 35px 0; }
+    .welcome-message h1 { font-size: clamp(30px, 4vw, 46px); line-height: 1.4; margin-bottom: 16px; }
+    .welcome-message p { color: #e2edf9; line-height: 1.8; font-size: 17px; }
+    .welcome-footer { color: #d6e5f5; font-size: 13px; }
+
+    .login-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 25px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 450px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 12px 36px rgba(29, 41, 57, 0.08);
+    }
+
+    .eyebrow { color: var(--primary); font-size: 13px; font-weight: bold; margin-top: 10px; }
+    h2 { margin: 10px 0; font-size: 26px; }
+    .description { color: var(--muted); line-height: 1.8; margin-bottom: 24px; }
+    .field-label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 8px; }
+
+    .phone-wrap { width: 100%; margin-bottom: 16px; direction: ltr; }
+    .iti { width: 100%; display: block; direction: ltr; }
+    .iti input {
+      width: 100%; height: 50px; border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 12px 10px 52px !important;
+      direction: ltr; text-align: left; outline: none; background: white;
+    }
+    .iti input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(23, 105, 170, 0.12); }
+
+    .password-input {
+      width: 100%; height: 50px; border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; outline: none; background: white;
+      margin-bottom: 20px; font-size: 16px; direction: ltr; text-align: left;
+    }
+    .password-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(23, 105, 170, 0.12); }
+
+    .primary-button {
+      width: 100%; min-height: 48px; padding: 12px 16px;
+      background: var(--primary); color: white; border: 0;
+      border-radius: 10px; font-weight: bold; transition: background 0.2s;
+    }
+    .primary-button:hover:not(:disabled) { background: var(--primary-dark); }
+
+    .message { font-size: 14px; line-height: 1.8; margin-top: 12px; text-align: center; }
+    .error { color: var(--danger); }
+    .success { color: var(--success); }
+
+    .account-switch { text-align: center; margin-top: 20px; font-size: 14px; color: var(--muted); }
+    .text-button { color: var(--primary); background: transparent; border: 0; padding: 4px 8px; font-weight: bold; cursor: pointer; }
+
+    /* النوافذ المنبثقة (Modals) */
+    .modal {
+      position: fixed; inset: 0; z-index: 1000; background: rgba(16, 24, 40, 0.75);
+      display: flex; align-items: center; justify-content: center; padding: 18px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-card {
+      width: 100%; max-width: 420px; background: white;
+      border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .image-modal-card {
+      max-width: 90vw; max-height: 90vh; background: transparent;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .full-image {
+      max-width: 100%; max-height: 80vh; object-fit: contain;
+      border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); background: #000;
+    }
+    .close-image-btn {
+      margin-top: 15px; background: #ffffff; color: var(--text); border: 0;
+      padding: 10px 24px; border-radius: 20px; font-weight: bold; cursor: pointer;
+    }
+
+    /* لوحة التحكم والوثائق */
+    .dashboard { min-height: 100vh; padding-bottom: 40px; }
+    .dashboard-header {
+      background: linear-gradient(130deg, #123b67, #1769aa);
+      color: white; padding: 28px 20px 35px;
+    }
+    .header-content, .dashboard-content { max-width: 1100px; margin: auto; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .header-top .text-button { color: white; border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 8px; }
+
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, 0.15); font-size: 20px; overflow: hidden; object-fit: cover; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .small-label { display: block; font-size: 12px; color: #dceafa; margin-bottom: 3px; }
+
+    .dashboard-heading { margin-top: 25px; }
+    .dashboard-heading h1 { margin: 0 0 8px; font-size: 28px; }
+    .dashboard-heading p { color: #e2edf9; margin: 0; }
+
+    .dashboard-content { padding: 28px 20px; }
+    .section-title h2 { font-size: 22px; margin: 0 0 6px; }
+    .section-title p { color: var(--muted); margin: 0 0 24px; }
+
+    .documents-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;
+    }
+    .document-card {
+      background: white; border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; box-shadow: 0 3px 12px rgba(29, 41, 57, 0.04);
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .document-heading {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px;
+    }
+    .document-title { display: flex; align-items: center; gap: 12px; }
+    .document-icon {
+      width: 44px; height: 44px; display: grid; place-items: center;
+      background: #eaf3fc; border-radius: 12px; font-size: 20px;
+    }
+    .document-title h3 { font-size: 16px; margin: 0 0 4px; }
+    .document-code { color: var(--muted); font-size: 12px; }
+
+    .status {
+      background: #f2f4f7; color: #667085; border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 500;
+    }
+    .status.uploaded { background: #e7f7ee; color: var(--success); }
+
+    .image-preview-container {
+      position: relative; cursor: pointer; border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border); background: #f8fafc; text-align: center; margin-bottom: 12px;
+    }
+    .image-preview-container:hover .image-overlay { opacity: 1; }
+    .preview-image {
+      display: block; width: 100%; height: 180px; object-fit: contain; padding: 8px; background: #ffffff;
+    }
+    .image-overlay {
+      position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4);
+      display: flex; align-items: center; justify-content: center; color: white;
+      font-weight: bold; font-size: 14px; opacity: 0; transition: opacity 0.2s ease;
+    }
+
+    .upload-area {
+      display: block; border: 2px dashed #b8c5d5; border-radius: 12px;
+      padding: 24px 12px; text-align: center; background: #f9fbfd; cursor: pointer; transition: background 0.2s;
+    }
+    .upload-area:hover { background: #f0f4f8; border-color: var(--primary); }
+    .upload-area input { display: none; }
+    .upload-icon { font-size: 28px; margin-bottom: 8px; }
+    .upload-area strong { display: block; font-size: 14px; color: var(--text); }
+    .upload-area small { display: block; color: var(--muted); margin-top: 6px; }
+
+    .document-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .remove-button { border: 0; background: transparent; color: var(--danger); padding: 6px; font-size: 13px; cursor: pointer; }
+
+    .toast {
+      position: fixed; left: 20px; bottom: 20px; z-index: 2000;
+      background: #182230; color: white; border-radius: 10px;
+      padding: 12px 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease;
+      transform: translateY(10px);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 800px) {
+      .auth-page { grid-template-columns: 1fr; }
+      .welcome-panel { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- واجهة تسجيل الدخول / إنشاء حساب -->
+  <main id="authPage" class="auth-page">
+    <section class="welcome-panel">
+      <div class="brand">🛡️ محفظة الوثائق</div>
+      <div class="welcome-message">
+        <h1 id="welcomeTitle">تسجيل الدخول للنظام</h1>
+        <p>نظام محلي آمن لإدارة الوثائق الرسمية بواسطة رقم الهاتف وكلمة المرور مع التحقق الثنائي.</p>
+      </div>
+      <div class="welcome-footer">نظام التخزين المحلي المحمي</div>
+    </section>
+
+    <section class="login-panel">
+      <div class="login-card">
+        <p class="eyebrow" id="formEyebrow">بوابة الحسابات</p>
+        <h2 id="formHeading">تسجيل الدخول</h2>
+        <p class="description" id="formDesc">أدخل رقم هاتفك وكلمة المرور للوصول إلى محفظتك.</p>
+
+        <form id="authForm">
+          <label class="field-label" for="phone">رقم الهاتف</label>
+          <div class="phone-wrap">
+            <input id="phone" type="tel" autocomplete="tel" placeholder="أدخل رقم الهاتف" required>
+          </div>
+
+          <label class="field-label" for="password">كلمة المرور</label>
+          <input id="password" type="password" class="password-input" placeholder="أدخل كلمة المرور" required>
+
+          <button id="submitBtn" class="primary-button" type="submit">دخول</button>
+        </form>
+
+        <div id="authMessage" class="message"></div>
+
+        <div class="account-switch">
+          <span id="switchText">ليس لديك حساب؟</span>
+          <button id="switchBtn" class="text-button" type="button">إنشاء حساب جديد</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- نافذة التحقق بخطوتين (2FA Modal) -->
+  <section id="twoFaModal" class="modal hidden">
+    <div class="modal-card">
+      <h2>التحقق الثنائي (2FA)</h2>
+      <p class="description" style="margin-bottom:15px; font-size:13px;">تم إرسال رمز التحقق (راجع نافذة تشغيل السيرفر Terminal لعرض الرمز).</p>
+      
+      <form id="twoFaForm">
+        <label class="field-label">رمز التحقق (6 أرقام)</label>
+        <input id="twoFaCodeInput" type="text" class="password-input" placeholder="أدخل الكود هنا" maxlength="6" style="text-align:center; font-size:20px; letter-spacing:4px;" required>
+
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button type="submit" class="primary-button">تأكيد الرمز</button>
+          <button type="button" id="closeTwoFaBtn" class="primary-button" style="background:var(--muted);">إلغاء</button>
+        </div>
+      </form>
+      <div id="twoFaMessage" class="message"></div>
+    </div>
+  </section>
+
+  <!-- نافذة الملف الشخصي -->
+  <section id="profileModal" class="modal hidden">
+    <div class="modal-card">
+      <h2>إعدادات الملف الشخصي</h2>
+      <p class="description" style="margin-bottom:15px; font-size:13px;">تعديل الاسم، الصورة الشخصية، أو كلمة المرور.</p>
+      
+      <form id="profileForm">
+        <label class="field-label">الاسم الشخصي</label>
+        <input id="profileNameInput" type="text" class="password-input" placeholder="أدخل اسمك" style="margin-bottom:12px;">
+
+        <label class="field-label">تغيير الصورة الشخصية</label>
+        <input id="profileAvatarInput" type="file" accept="image/*" style="margin-bottom:15px; display:block;">
+
+        <label class="field-label">كلمة المرور الجديدة (اختياري)</label>
+        <input id="profilePasswordInput" type="password" class="password-input" placeholder="اتركه فارغاً إذا لم ترغب بتغييرها" style="margin-bottom:15px;">
+
+        <div style="display:flex; gap:10px;">
+          <button type="submit" class="primary-button">حفظ التغييرات</button>
+          <button type="button" id="closeProfileBtn" class="primary-button" style="background:var(--muted);">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- نافذة تكبير الصورة -->
+  <section id="imageViewerModal" class="modal hidden">
+    <div class="image-modal-card">
+      <img id="fullImageView" class="full-image" src="" alt="عرض الوثيقة">
+      <button id="closeImageBtn" class="close-image-btn" type="button">إغلاق المعاينة</button>
+    </div>
+  </section>
+
+  <!-- الواجهة الرئيسية والوثائق -->
+  <main id="dashboard" class="dashboard hidden">
+    <header class="dashboard-header">
+      <div class="header-content">
+        <div class="header-top">
+          <div class="user-info">
+            <div class="avatar" id="userAvatarContainer">👤</div>
+            <div>
+              <span class="small-label" id="userNameDisplay">المستخدم</span>
+              <strong id="userPhoneDisplay">--</strong>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button id="profileButton" class="text-button" type="button">⚙️ الملف الشخصي</button>
+            <button id="logoutButton" class="text-button" type="button">تسجيل الخروج</button>
+          </div>
+        </div>
+        <div class="dashboard-heading">
+          <h1>المستندات والوثائق</h1>
+          <p>يمكنك رفع الوثائق الخاصة بك واستعراضها بكل سهولة.</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="dashboard-content">
+      <div class="section-title">
+        <h2>قائمة المستندات</h2>
+        <p>اختر الوثيقة المناسبة وقم برفع صورتها.</p>
+      </div>
+
+      <div id="documentsGrid" class="documents-grid"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    "use strict";
+
+    let phoneInput = null;
+    let isSignupMode = false;
+    let savedDocuments = {};
+    let currentUser = null;
+    let currentUserData = {};
+    let tempPhoneFor2FA = null;
+
+    const documents = [
+      { key: "birth", title: "شهادة ميلاد", code: "BTH-01" },
+      { key: "license", title: "رخصة قيادة", code: "DRV-02" },
+      { key: "permit", title: "تصريح ممغنط", code: "MGP-03" },
+      { key: "passport", title: "جواز سفر", code: "PAS-04" },
+      { key: "identity", title: "هوية شخصية", code: "NID-05" }
+    ];
+
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (typeof window.intlTelInput === "function") {
+        phoneInput = window.intlTelInput($("#phone"), {
+          initialCountry: "ps",
+          preferredCountries: ["ps", "jo", "sa", "ae"],
+          separateDialCode: true,
+          nationalMode: true,
+          utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/18.2.1/js/utils.js"
+        });
+      }
+
+      const savedSession = localStorage.getItem("current_user_phone");
+      if (savedSession) {
+        currentUser = savedSession;
+        showDashboard();
+        await fetchUserData();
+        await fetchDocuments();
+      }
+      setupEvents();
+    });
+
+    async function fetchUserData() {
+      if (!currentUser) return;
+      try {
+        const res = await fetch(`/api/user-info?phone=${encodeURIComponent(currentUser)}`);
+        if (res.ok) {
+          currentUserData = await res.json();
+          updateHeaderUserInfo();
+        }
+      } catch (e) {}
+    }
+
+    function updateHeaderUserInfo() {
+      $("#userPhoneDisplay").textContent = currentUser;
+      $("#userNameDisplay").textContent = currentUserData.name || "مستخدم النظام";
+      const avatarContainer = $("#userAvatarContainer");
+      if (currentUserData.avatar) {
+        avatarContainer.innerHTML = `<img src="${currentUserData.avatar}" alt="صورة المستخدم">`;
+      } else {
+        avatarContainer.innerHTML = `👤`;
+      }
+    }
+
+    async function fetchDocuments() {
+      if (!currentUser) return;
+      try {
+        const res = await fetch(`/api/documents?phone=${encodeURIComponent(currentUser)}`);
+        if (res.ok) {
+          savedDocuments = await res.json();
+          renderDocuments();
+        }
+      } catch (e) {}
+    }
+
+    function showToast(msg) {
+      const toast = $("#toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    function showDashboard() {
+      $("#authPage").classList.add("hidden");
+      $("#dashboard").classList.remove("hidden");
+      updateHeaderUserInfo();
+      renderDocuments();
+    }
+
+    function setupEvents() {
+      $("#switchBtn").addEventListener("click", () => {
+        isSignupMode = !isSignupMode;
+        $("#authMessage").textContent = "";
+        if (isSignupMode) {
+          $("#formHeading").textContent = "إنشاء حساب جديد";
+          $("#formDesc").textContent = "أدخل رقم هاتفك وكلمة مرور جديدة للتسجيل.";
+          $("#submitBtn").textContent = "تسجيل وحفظ";
+          $("#switchText").textContent = "لديك حساب بالفعل؟";
+          $("#switchBtn").textContent = "تسجيل الدخول";
+        } else {
+          $("#formHeading").textContent = "تسجيل الدخول";
+          $("#formDesc").textContent = "أدخل رقم هاتفك وكلمة المرور للوصول إلى محفظتك.";
+          $("#submitBtn").textContent = "دخول";
+          $("#switchText").textContent = "ليس لديك حساب؟";
+          $("#switchBtn").textContent = "إنشاء حساب جديد";
+        }
+      });
+
+      $("#authForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const msgEl = $("#authMessage");
+        msgEl.textContent = "";
+        msgEl.className = "message";
+
+        if (!phoneInput || !phoneInput.isValidNumber()) {
+          msgEl.textContent = "يرجى إدخال رقم هاتف صحيح.";
+          msgEl.classList.add("error");
+          return;
+        }
+
+        const phone = phoneInput.getNumber();
+        const password = $("#password").value.trim();
+        const endpoint = isSignupMode ? '/api/register' : '/api/login';
+
+        try {
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, password })
+          });
+
+          const result = await res.json();
+
+          if (res.ok) {
+            if (isSignupMode) {
+              msgEl.textContent = "تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.";
+              msgEl.classList.add("success");
+              isSignupMode = false;
+              $("#formHeading").textContent = "تسجيل الدخول";
+              $("#submitBtn").textContent = "دخول";
+              $("#switchText").textContent = "ليس لديك حساب؟";
+              $("#switchBtn").textContent = "إنشاء حساب جديد";
+            } else {
+              if (result.requires_2fa) {
+                tempPhoneFor2FA = result.phone;
+                $("#twoFaCodeInput").value = "";
+                $("#twoFaMessage").textContent = "";
+                $("#twoFaModal").classList.remove("hidden");
+              }
+            }
+          } else {
+            msgEl.textContent = result.error || "حدث خطأ أثناء العملية.";
+            msgEl.classList.add("error");
+          }
+        } catch (err) {
+          msgEl.textContent = "تعذر الاتصال بالخادم.";
+          msgEl.classList.add("error");
+        }
+      });
+
+      // التعامل مع إرسال رمز 2FA
+      $("#twoFaForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const code = $("#twoFaCodeInput").value.trim();
+        const msgEl = $("#twoFaMessage");
+        msgEl.textContent = "";
+
+        try {
+          const res = await fetch('/api/verify-2fa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: tempPhoneFor2FA, code })
+          });
+
+          const result = await res.json();
+          if (res.ok) {
+            currentUser = result.phone;
+            localStorage.setItem("current_user_phone", currentUser);
+            $("#twoFaModal").classList.add("hidden");
+            showDashboard();
+            await fetchUserData();
+            await fetchDocuments();
+          } else {
+            msgEl.textContent = result.error || "رمز التحقق غير صحيح.";
+            msgEl.classList.add("error");
+          }
+        } catch (err) {
+          msgEl.textContent = "تعذر الاتصال بالخادم.";
+          msgEl.classList.add("error");
+        }
+      });
+
+      $("#closeTwoFaBtn").addEventListener("click", () => {
+        $("#twoFaModal").classList.add("hidden");
+      });
+
+      $("#profileButton").addEventListener("click", () => {
+        $("#profileNameInput").value = currentUserData.name || "";
+        $("#profilePasswordInput").value = "";
+        $("#profileModal").classList.remove("hidden");
+      });
+
+      $("#closeProfileBtn").addEventListener("click", () => {
+        $("#profileModal").classList.add("hidden");
+      });
+
+      $("#profileForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const newName = $("#profileNameInput").value.trim();
+        const newPassword = $("#profilePasswordInput").value.trim();
+        const avatarFile = $("#profileAvatarInput").files[0];
+
+        let avatarBase64 = currentUserData.avatar || "";
+
+        const sendUpdate = async (avatarData) => {
+          if (!currentUser) {
+            showToast("خطأ: لم يتم التعرف على المستخدم الحالي.");
+            return;
+          }
+
+          try {
+            const res = await fetch('/api/update-profile', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                phone: currentUser,
+                name: newName,
+                password: newPassword,
+                avatar: avatarData
+              })
+            });
+            
+            if (res.ok) {
+              const result = await res.json();
+              currentUserData = result.user;
+              updateHeaderUserInfo();
+              $("#profileModal").classList.add("hidden");
+              showToast("تم تحديث الملف الشخصي بنجاح!");
+            } else {
+              const errData = await res.json();
+              showToast("فشل الحفظ: " + (errData.error || "خطأ غير معروف"));
+            }
+          } catch (err) {
+            showToast("تعذر الاتصال بالخادم لتحديث البيانات.");
+          }
+        };
+
+        if (avatarFile) {
+          if (avatarFile.size > 2 * 1024 * 1024) {
+            showToast("حجم الصورة كبير جداً، يرجى اختيار صورة أصغر من 2MB.");
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = async () => {
+            await sendUpdate(reader.result);
+          };
+          reader.readAsDataURL(avatarFile);
+        } else {
+          await sendUpdate(avatarBase64);
+        }
+      });
+
+      $("#logoutButton").addEventListener("click", () => {
+        localStorage.removeItem("current_user_phone");
+        currentUser = null;
+        savedDocuments = {};
+        $("#dashboard").classList.add("hidden");
+        $("#authPage").classList.remove("hidden");
+        $("#password").value = "";
+      });
+
+      $("#closeImageBtn").addEventListener("click", () => $("#imageViewerModal").classList.add("hidden"));
+      $("#imageViewerModal").addEventListener("click", e => {
+        if (e.target === $("#imageViewerModal")) $("#imageViewerModal").classList.add("hidden");
+      });
+    }
+
+    function openImageViewer(src) {
+      $("#fullImageView").src = src;
+      $("#imageViewerModal").classList.remove("hidden");
+    }
+
+    function renderDocuments() {
+      const grid = $("#documentsGrid");
+      if (!grid) return;
+
+      grid.innerHTML = documents.map(doc => {
+        const image = savedDocuments[doc.key];
+
+        return `
+          <article class="document-card">
+            <div>
+              <div class="document-heading">
+                <div class="document-title">
+                  <div class="document-icon">📄</div>
+                  <div>
+                    <h3>${doc.title}</h3>
+                    <span class="document-code">${doc.code}</span>
+                  </div>
+                </div>
+                <span class="status ${image ? "uploaded" : ""}">
+                  ${image ? "تم الرفع" : "غير مرفوع"}
+                </span>
+              </div>
+
+              ${
+                image
+                  ? `<div class="image-preview-container" data-view="${image}">
+                       <img class="preview-image" src="${image}" alt="${doc.title}">
+                       <div class="image-overlay">🔍 اضغط لتكبير الصورة</div>
+                     </div>
+                     <div class="document-actions">
+                       <label class="text-button" style="cursor:pointer">
+                         تغيير الصورة
+                         <input type="file" class="hidden" data-file="${doc.key}" accept="image/*">
+                       </label>
+                       <button class="remove-button" type="button" data-remove="${doc.key}">حذف</button>
+                     </div>`
+                  : `<label class="upload-area">
+                       <input type="file" data-file="${doc.key}" accept="image/*">
+                       <div class="upload-icon">📤</div>
+                       <strong>رفع ${doc.title}</strong>
+                       <small>PNG, JPG حتى 5MB</small>
+                     </label>`
+              }
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      $$("[data-view]").forEach(el => {
+        el.addEventListener("click", () => openImageViewer(el.dataset.view));
+      });
+
+      $$("[data-file]").forEach(input => {
+        input.addEventListener("change", e => {
+          const file = e.target.files?.[0];
+          const docKey = input.dataset.file;
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = async () => {
+            const dataUrl = reader.result;
+            savedDocuments[docKey] = dataUrl;
+
+            try {
+              await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: currentUser, docKey, fileName: file.name, fileData: dataUrl })
+              });
+            } catch (err) {}
+
+            renderDocuments();
+            showToast("تم حفظ الصورة بنجاح!");
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      $$("[data-remove]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const docKey = btn.dataset.remove;
+          delete savedDocuments[docKey];
+
+          try {
+            await fetch('/api/delete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ phone: currentUser, docKey })
+            });
+          } catch (e) {}
+
+          renderDocuments();
+          showToast("تم حذف الصورة.");
+        });
+      });
+    }
+  </script>
+</body>
+</html>
